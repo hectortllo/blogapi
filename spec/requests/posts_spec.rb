@@ -3,6 +3,7 @@ require "byebug"
 
 RSpec.describe "Posts", type: :request do
 
+    #Prueba para listar todos los posts
     describe "GET /posts" do
         before { get '/posts' }
 
@@ -14,6 +15,7 @@ RSpec.describe "Posts", type: :request do
 
     end
 
+    #Prueba para listar los posts, pero teniendo información de la BD
     describe "with data in the DB" do
         #Se utilizará factory_bot para crear información  de ejemplo
         #Se utiliza para declarar una variable 'posts' a la cual se le asignará lo que 
@@ -47,6 +49,7 @@ RSpec.describe "Posts", type: :request do
         end
     end
 
+    #Prueba para mostar un post individualmente
     describe "GET /post/{id}" do
         #Se utilizará factory_bot para crear posts de ejemplo
         let!(:post) { create(:post) }
@@ -58,6 +61,88 @@ RSpec.describe "Posts", type: :request do
             expect(payload).to_not be_empty
             expect(payload["id"]).to eq(post.id)
             expect(response).to have_http_status(200)
+        end
+    end
+
+    #Prueba para la creación de posts
+    describe "POST /posts" do
+        let!(:user) { create(:user) }
+
+        it "should create a post" do
+            req_payload = {
+                post: {
+                    title: "titulo",
+                    content: "content",
+                    published: false,
+                    user_id: user.id
+                }
+            }
+
+            #Método POST de HTTP
+            post "/posts", params: req_payload
+            payload = JSON.parse(response.body)
+            expect(payload).to_not be_empty
+            expect(payload["id"]).to_not be_empty
+            expect(response).to have_http_status(:created)
+        end
+
+        #Dentro de la creación se hará otra prueba para verificar
+        #si todos los datos que se deben llenar al crear un post estén completos
+        it "should return error message on invalid post" do
+            req_payload = {
+                post: {
+                    content: "content",
+                    published: false,
+                    user_id: user.id
+                }
+            }
+
+            #Método POST de HTTP
+            post "/posts", params: req_payload
+            payload = JSON.parse(response.body)
+            expect(payload).to_not be_empty
+            expect(payload["error"]).to_not be_empty
+            expect(response).to have_http_status(:unprocessable_entity)
+        end
+    end
+
+    #Prueba para la edición de un post
+    describe "PUT /posts/{id}" do
+        let!(:article) { create(:post) }
+
+        it "should create a post" do
+            req_payload = {
+                post: {
+                    title: "titulo",
+                    content: "content",
+                    published: true
+                }
+            }
+
+            #Método PUT de HTTP
+            put "/posts/#{article.id}", params: req_payload
+            payload = JSON.parse(response.body)
+            expect(payload).to_not be_empty
+            expect(payload["id"]).to eq(article.id)
+            expect(response).to have_http_status(:ok)
+        end
+
+        it "should return error message on invalid post" do
+            req_payload = {
+                post: {
+                    title: nil,
+                    content: nil,
+                    published: false
+                }
+            }
+
+            #Método PUT de HTTP
+            put "/posts/#{article.id}", params: req_payload
+            payload = JSON.parse(response.body)
+            expect(payload).to_not be_empty
+            expect(payload["error"]).to eq(article.id)
+            expect(response).to have_http_status(:unprocessable_entity)
+            
         end
     end
 end
