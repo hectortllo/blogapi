@@ -1,4 +1,5 @@
 class PostsController < ApplicationController
+    before_action :authenticate_user!, only: [:create, :update]
 
     #Manejo de excepciones en rails
     #Esta excepción se ejecutará en todas las excepciones que no estén
@@ -57,5 +58,24 @@ class PostsController < ApplicationController
     def update_params
         params.require(:post).permit(:title, :content, :published)
     end
-    
+   
+    def authenticate_user!
+        #Bearer xxxx
+        token_regex = /Bearer (\w+)/
+        #leer HEADER de autenticación 
+        headers = request.headers
+        #verificar que sea válido
+        if headers['Authorization'].present? && 
+            headers['Authorization'].match(token_regex)
+            token = headers['Authorization'].match(token_regex)[1]
+            #verificar que el token corresponda a un usuario
+            if(Current.user = User.find_by_auth_token(token))
+                return
+            end
+        end
+
+        render json: { error: 'Unauthorized' }, status: :unauthorized        
+
+
+    end
 end
