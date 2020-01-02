@@ -5,5 +5,5 @@ Rails.application.routes.draw do
 
   #Método utilitario para definir los elementos CRUD de un modelo
   #En este caso solo estamos interesados en el index y en el show
-  resources :posts, only: [:index, :show]
+  resources :posts, only: [:index, :show, :create, :update]
 end
