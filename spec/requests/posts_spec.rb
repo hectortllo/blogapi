@@ -1,19 +1,33 @@
 require "rails_helper"
-require "byebug"
 
 RSpec.describe "Posts", type: :request do
 
     #Prueba para listar todos los posts
     describe "GET /posts" do
-        before { get '/posts' }
-
         it "should return OK" do
+            get '/posts'
             payload = JSON.parse(response.body)
             expect(payload).to be_empty
             expect(response).to have_http_status(200)
         end
 
+        #Prueba para la búsqueda de posts
+        describe "Search" do
+            let!(:hola_mundo) { create(:published_post, title: 'Hola Mundo') }
+            let!(:hola_rails) { create(:published_post, title: 'Hola Rails') }
+            let!(:curso_rails) { create(:published_post, title: 'Curso Rails') }
+
+            it "should filter posts by title " do
+                get "/posts?search=Hola"
+                payload = JSON.parse(response.body)
+                expect(payload).to be_empty
+                expect(payload.size).to eq(2)
+                expect(payload.map { |p| p["id"] }.sort).to eq([hola_mundo.id, hola_rails.id].sort)
+                expect(response).to have_http_status(200)
+            end
+        end
     end
+
 
     #Prueba para listar los posts, pero teniendo información de la BD
     describe "with data in the DB" do
