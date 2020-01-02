@@ -1,14 +1,18 @@
 require 'byebug'
 
 class PostsController < ApplicationController
+    include Secured
     before_action :authenticate_user!, only: [:create, :update]
 
     #Manejo de excepciones en rails
     #Esta excepción se ejecutará en todas las excepciones que no estén
     #manejadas por el programador
     rescue_from  Exception do |e |
-        byebug
         render json: { error: e.message }, status: :internal_error
+    end
+
+    rescue_from ActiveRecord::RecordNotFound do |e|
+        render json: { error: e.message }, status: :not_found
     end
 
     rescue_from  ActiveRecord::RecordInvalid do |e |
@@ -35,7 +39,7 @@ class PostsController < ApplicationController
     #Método para mostrar los posts, por convención es show
     # GET /posts/{id}
     def show
-        @post = Post.find(params[:id])
+        @post = Post.find(params[:id]) #ActiveRecord::RecordNotFound
         if (@post.published? || (Current.user && @post.user_id == Current.user.id))
             render json: @post, status: :ok
         else
@@ -64,23 +68,5 @@ class PostsController < ApplicationController
 
     def update_params
         params.require(:post).permit(:title, :content, :published)
-    end
-   
-    def authenticate_user!
-        #Bearer xxxx
-        token_regex = /Bearer (\w+)/
-        #leer HEADER de autenticación 
-        headers = request.headers
-        #verificar que sea válido
-        if headers['Authorization'].present? && 
-            headers['Authorization'].match(token_regex)
-            token = headers['Authorization'].match(token_regex)[1]
-            #verificar que el token corresponda a un usuario
-            if(Current.user = User.find_by_auth_token(token))
-                return
-            end
-        end
-
-        render json: { error: 'Unauthorized' }, status: :unauthorized
     end
 end
