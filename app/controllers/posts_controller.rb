@@ -15,6 +15,11 @@ class PostsController < ApplicationController
     # GET /posts
     def index
         @posts = Post.where(published: true)
+
+        #Si dentro de los parámetros el dato 'search' no es nulo y está presente, haga lo siguiente:
+        if !params[:search].nil? && params[:search].present?
+            @posts = PostsSearchService.search(@posts, params[:search])
+        end
         #Renderizar la información  a archivos json. Rails lo hace automáticamente
         render json: @posts, status: :ok
     end
