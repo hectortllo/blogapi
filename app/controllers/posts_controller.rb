@@ -21,7 +21,11 @@ class PostsController < ApplicationController
             @posts = PostsSearchService.search(@posts, params[:search])
         end
         #Renderizar la información  a archivos json. Rails lo hace automáticamente
-        render json: @posts, status: :ok
+        #Explicación @posts.includes(:user) ->
+            #Con esto se logra hacer una consulta a la BD para traer los posts
+            #Y una consulta para traer la información de los usuarios relacionados
+            #a los posts. Y con esto se resuelve el problema N + 1
+        render json: @posts.includes(:user), status: :ok
     end
 
     #Método para mostrar los posts, por convención es show
