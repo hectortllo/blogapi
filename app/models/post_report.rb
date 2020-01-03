@@ -4,7 +4,7 @@ class PostReport < Struct.new(:word_count, :word_histogram)
     PostReport.new(
       #word_count
       #Reemplazar signos de puntuación
-      post.content.split.map { |word| word.gsub(/\W/,'') }.count
+      post.content.split.map { |word| word.gsub(/\W/,'') }.count,
       #word_histogram
       calc_histogram(post)
     )
